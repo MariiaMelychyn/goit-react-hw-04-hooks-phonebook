@@ -1,86 +1,207 @@
-import { useState, useEffect } from 'react';
-import shortid from 'shortid';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import Container from './components/Container/Container';
-import ContactForm from './components/ContactForm/ContactForm';
-import Filter from './components/Filter/Filter';
-import ContactList from './components/ContactList/ContactList';
+import { useState, useEffect } from "react";
+import { nanoid } from "nanoid";
 
-function App() {
-  const [contacts, setContacts] = useState(() => {
-    return JSON.parse(localStorage.getItem('contacts')) ?? [];
-  });
+import Container from "./Components/Container/";
+import Section from "./Components/Section";
+import PhoneBookList from "./Components/PhoneBookList";
+import PhoneBookEditor from "./Components/PhoneBookEditor";
+import Filter from "./Components/Filter";
+import filterContacts from "./helpers/filtersContacts";
+import InitialContacts from "./data/InitialContacts.json";
+
+import "./App.css";
+
+export default function App() {
+  const [contacts, setContacts] = useState(
+    () => JSON.parse(window.localStorage.getItem("contacts")) ?? InitialContacts
+  );
+  const [name, setName] = useState("");
+  const [number, setNumber] = useState("");
+  const [filter, setFilter] = useState("");
 
   useEffect(() => {
-    window.localStorage.setItem('contacts', JSON.stringify(contacts));
+    localStorage.setItem("contacts", JSON.stringify(contacts));
   }, [contacts]);
 
-  const [filter, setFilter] = useState('');
+  const handleChangeInput = (e) => {
+    const { name, value } = e.target;
 
-  const addContact = (name, number) => {
-    const contact = {
-      id: shortid.generate(),
-      name,
-      number,
-    };
+    switch (name) {
+      case "name":
+        setName(value);
+        break;
 
-    if (
-      contacts.find(
-        contact => contact.name.toLowerCase() === name.toLowerCase(),
-      )
-    ) {
-      toast(`🤔 ${name} is already in contacts.`);
-    } else if (contacts.find(contact => contact.number === number)) {
-      toast(`🤔 ${number} is already in contacts.`);
-    } else if (name.trim() === '' || number.trim() === '') {
-      toast.info("😱 Enter the contact's name and number phone!");
-    } else if (!/\d{3}[-]\d{2}[-]\d{2}/g.test(number)) {
-      toast.error('💩 Enter the correct number phone!');
-    } else {
-      setContacts(prevContacts =>
-        [contact, ...prevContacts].sort((a, b) => {
-          if (a.name.toLowerCase() > b.name.toLowerCase()) return 1;
-          if (a.name.toLowerCase() < b.name.toLowerCase()) return -1;
-          return 0;
-        }),
-      );
+      case "number":
+        setNumber(value);
+        break;
+
+      case "filter":
+        setFilter(value);
+        break;
+
+      default:
+        return;
     }
   };
 
-  const deleteContact = contactId => {
-    setContacts(contacts.filter(({ id }) => id !== contactId));
+  const handleAddNewContact = (e) => {
+    e.preventDefault();
+
+    if (contacts.some((el) => el.name === name)) {
+      alert(`${name} has alredy be declared`);
+      return;
+    }
+
+    let newContact = {
+      name: name,
+      number: number,
+      id: nanoid(),
+    };
+    setContacts((prevState) => [...prevState, newContact]);
+    setName("");
+    setNumber("");
   };
 
-  const changeFilter = e => {
-    setFilter(e.currentTarget.value);
+  const onDeleteContact = (e) => {
+    setContacts(() => contacts.filter((el) => el.id !== e.target.id));
   };
 
-  const getVisibleContacts = () => {
-    const normalizedFilter = filter.toLowerCase();
-
-    return contacts.filter(({ name }) =>
-      name.toLowerCase().includes(normalizedFilter),
-    );
-  };
-
+  const contactsArray = filterContacts(contacts, filter);
   return (
-    <Container>
-      <h1>Phonebook</h1>
-      <ContactForm onSubmit={addContact} />
-      <h2>Contacts</h2>
-      {contacts.length > 1 && <Filter value={filter} onChange={changeFilter} />}
-      {contacts.length > 0 ? (
-        <ContactList
-          contacts={getVisibleContacts()}
-          onDeleteContact={deleteContact}
-        />
-      ) : (
-        <p>Your phonebook is empty. Please add contact.</p>
-      )}
-      <ToastContainer autoClose={3700} />
-    </Container>
+    <div className="App">
+      <Container>
+        <Section title={"Phonebook"}>
+          <Section title={"Add new contact"}>
+            <PhoneBookEditor
+              name={name}
+              number={number}
+              handleAddNewContact={handleAddNewContact}
+              handleChangeInput={handleChangeInput}
+            />
+          </Section>
+          <Section title={"Contacts"}>
+            <Filter onChange={handleChangeInput} filterValue={filter} />
+            <PhoneBookList
+              contacts={contactsArray}
+              onDeleteContact={onDeleteContact}
+            />
+          </Section>
+        </Section>
+      </Container>
+    </div>
   );
 }
 
-export default App;
+// THE CODE IS WRITTEN IN CLASSES
+// import { Component } from "react";
+// import { nanoid } from "nanoid";
+
+// import Container from "./Components/Container/";
+// import Section from "./Components/Section";
+// import PhoneBookList from "./Components/PhoneBookList";
+// import PhoneBookEditor from "./Components/PhoneBookEditor";
+// import Filter from "./Components/Filter";
+// import filterContacts from "./helpers/filtersContacts";
+// import InitialContacts from "./data/InitialContacts.json";
+
+// import "./App.css";
+
+// class App extends Component {
+//   state = {
+//     contacts: InitialContacts,
+//     name: "",
+//     number: "",
+//     filter: "",
+//   };
+
+//   componentDidMount() {
+//     // console.log("componentDidMount");
+//     const contactsFromLocalStorage = localStorage.getItem("contacts");
+//     // console.log(contactsFromLocalStorage);
+//     const parsedContactsFromLocalStorage = JSON.parse(contactsFromLocalStorage);
+//     console.log(parsedContactsFromLocalStorage);
+//     if (parsedContactsFromLocalStorage) {
+//       this.setState({ contacts: parsedContactsFromLocalStorage });
+//     }
+//     // const contacts =
+//   }
+
+//   componentDidUpdate(prevProps, prevState) {
+//     // console.log("componentDidUpdate");
+//     if (this.state.contacts !== prevState.contacts) {
+//       console.log("Обновилося поле contacts");
+//       localStorage.setItem("contacts", JSON.stringify(this.state.contacts));
+//     }
+//   }
+
+//   handleChangeInput = (e) => {
+//     this.setState({
+//       [e.target.name]: e.target.value,
+//     });
+//   };
+
+//   handleAddNewContact = (e) => {
+//     e.preventDefault();
+
+//     const { contacts, name, number } = this.state;
+//     if (contacts.some((el) => el.name === name)) {
+//       alert(`${name} has alredy be declared`);
+//       return;
+//     }
+
+//     let contact = {
+//       name: name,
+//       number: number,
+//       id: nanoid(),
+//     };
+
+//     this.setState((prevState) => ({
+//       contacts: [...prevState.contacts, contact],
+//       name: "",
+//       number: "",
+//     }));
+//   };
+
+//   onDeleteContact = (e) => {
+//     const { contacts } = this.state;
+//     this.setState({
+//       contacts: contacts.filter((el) => el.id !== e.target.id),
+//     });
+//   };
+
+//   handleChangeFilter = (e) => {
+//     this.setState({
+//       [e.target.name]: e.target.value,
+//     });
+//   };
+
+//   render() {
+//     const contacts = filterContacts(this.state.contacts, this.state.filter);
+//     const { name, number, filter } = this.state;
+//     return (
+//       <div className="App">
+//         <Container>
+//           <Section title={"Phonebook"}>
+//             <Section title={"Add new contact"}>
+//               <PhoneBookEditor
+//                 name={name}
+//                 number={number}
+//                 handleAddNewContact={this.handleAddNewContact}
+//                 handleChangeInput={this.handleChangeInput}
+//               />
+//             </Section>
+//             <Section title={"Contacts"}>
+//               <Filter onChange={this.handleChangeFilter} filterValue={filter} />
+//               <PhoneBookList
+//                 contacts={contacts}
+//                 onDeleteContact={this.onDeleteContact}
+//               />
+//             </Section>
+//           </Section>
+//         </Container>
+//       </div>
+//     );
+//   }
+// }
+
+// export default App;
