@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import ContactForm from 'components/ContactForm/ContactForm';
-import Filter from 'components/Filter/Filter';
-import ContactList from 'components/ContactList/ContactList';
+import ContactForm from './components/ContactForm/ContactForm';
+import Filter from './components/Filter/Filter';
+import ContactList from './components/ContactList/ContactList';
 import styles from './App.css';
 import { v4 as uuidv4 } from "uuid";
 

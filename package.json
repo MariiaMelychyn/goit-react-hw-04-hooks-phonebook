@@ -16,6 +16,7 @@
     "shortid": "^2.2.16",
     "styled-components": "^5.3.1",
     "uuid": "^8.3.2",
+    "uuidv4": "^6.2.12",
     "web-vitals": "^1.1.2"
   },
   "scripts": {
