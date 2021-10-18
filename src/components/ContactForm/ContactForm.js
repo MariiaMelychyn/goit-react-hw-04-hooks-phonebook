@@ -1,65 +1,72 @@
 import { useState } from 'react';
-import styles from './ContactForm.module.css';
+import PropTypes from 'prop-types';
+import s from './ContactForm.module.css';
 
-
-function ContactForm({ contacts, onSubmit }) {
+function ContactForm({ onSubmit }) {
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
 
-  const handleChange = ({ target }) => {
-    const { name, value } = target;
+  const handleChange = e => {
+    const { name, value } = e.target;
+
     switch (name) {
       case 'name':
         setName(value);
         break;
+
       case 'number':
         setNumber(value);
         break;
+
       default:
         return;
     }
   };
 
-  const handleSubmit = event => {
-    event.preventDefault();
+  const handleSubmit = e => {
+    e.preventDefault();
     onSubmit(name, number);
-    reset();
+    resetInput();
   };
-  const reset = () => {
+
+  const resetInput = () => {
     setName('');
     setNumber('');
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.form}>
-      <label className={styles.label}>
-        Ім'я:
-          <input
-            type="text"
-            name="name"
-            value={name}
-            placeholder="Jack Sparrow"
-            onChange={handleChange}
-            className={styles.input}
-          />
+    <form className={s.form} onSubmit={handleSubmit}>
+      <label className={s.label}>
+        Name
+        <input
+          className={s.input}
+          type="text"
+          name="name"
+          value={name}
+          onChange={handleChange}
+          placeholder="Ivan Ivanov"
+        />
       </label>
-
-      <label className={styles.label}>
-        Номер:
-          <input
-            type="tel"
-            name="number"
-            value={number}
-            placeholder="111-11-11"
-            onChange={handleChange}
-            className={styles.input}
-          />
+      <label className={s.label}>
+        Number
+        <input
+          className={s.input}
+          type="tel"
+          name="number"
+          value={number}
+          onChange={handleChange}
+          placeholder="111-11-11"
+        />
       </label>
-      <button type="submit" className={styles.button} disabled={name === '' || number === ''}>
-        Додати контакт
+      <button className={s.btn} type="submit">
+        Add contact
       </button>
     </form>
   );
 }
-  
+
+ContactForm.propTypes = {
+  onSubmit: PropTypes.func.isRequired,
+};
+
 export default ContactForm;

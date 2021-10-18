@@ -1,77 +1,85 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import shortid from 'shortid';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Container from './components/Container/Container';
 import ContactForm from './components/ContactForm/ContactForm';
 import Filter from './components/Filter/Filter';
 import ContactList from './components/ContactList/ContactList';
-import styles from './App.css';
-import { v4 as uuidv4 } from "uuid";
-
-
-const useLocalStorage = (key, defaultValue) => {
-  const [state, setState] = useState(
-    () => JSON.parse(window.localStorage.getItem(key)) ?? defaultValue,
-  );
-
-  useEffect(() => {
-    window.localStorage.setItem(key, JSON.stringify(state));
-  }, [key, state]);
-
-  return [state, setState];
-};
 
 function App() {
+  const [contacts, setContacts] = useState(() => {
+    return JSON.parse(localStorage.getItem('contacts')) ?? [];
+  });
 
-  const [contacts, setContacts] = useLocalStorage('contacts', []);
+  useEffect(() => {
+    window.localStorage.setItem('contacts', JSON.stringify(contacts));
+  }, [contacts]);
+
   const [filter, setFilter] = useState('');
 
   const addContact = (name, number) => {
-    if(contacts.find(contact => contact.name === name)) {
-      alert(`Контакт з таким іменнем вже існує!`);
-      return;
-    }
-    const newContacts = {
-      id: uuidv4(),
+    const contact = {
+      id: shortid.generate(),
       name,
       number,
     };
 
-    setContacts(prevState => [newContacts, ...prevState]);
+    if (
+      contacts.find(
+        contact => contact.name.toLowerCase() === name.toLowerCase(),
+      )
+    ) {
+      toast(`🤔 ${name} is already in contacts.`);
+    } else if (contacts.find(contact => contact.number === number)) {
+      toast(`🤔 ${number} is already in contacts.`);
+    } else if (name.trim() === '' || number.trim() === '') {
+      toast.info("😱 Enter the contact's name and number phone!");
+    } else if (!/\d{3}[-]\d{2}[-]\d{2}/g.test(number)) {
+      toast.error('💩 Enter the correct number phone!');
+    } else {
+      setContacts(prevContacts =>
+        [contact, ...prevContacts].sort((a, b) => {
+          if (a.name.toLowerCase() > b.name.toLowerCase()) return 1;
+          if (a.name.toLowerCase() < b.name.toLowerCase()) return -1;
+          return 0;
+        }),
+      );
+    }
   };
 
   const deleteContact = contactId => {
-    setContacts(contacts.filter(contact => contact.id !== contactId));
+    setContacts(contacts.filter(({ id }) => id !== contactId));
   };
 
-  const changeFilter = ({ target }) => {
-    setFilter(target.value);
+  const changeFilter = e => {
+    setFilter(e.currentTarget.value);
   };
 
-  const visibleContacts = () => {
-    const normalized = filter.toLowerCase().trim();
-    return contacts.filter(({ name }) => 
-      name.toLowerCase().includes(normalized),
+  const getVisibleContacts = () => {
+    const normalizedFilter = filter.toLowerCase();
+
+    return contacts.filter(({ name }) =>
+      name.toLowerCase().includes(normalizedFilter),
     );
   };
 
-  const totalContactsCount = contacts.length;
-
   return (
-    <>
-      <div className={styles.container}>
-        <section title="Phonebook" className="Section">
-            <h1 className={styles.bigText}>Телефонна книга</h1>
-            <ContactForm onSubmit={addContact} />
-        </section>
-        <section title="Contacts" className="Section">
-            <h2 className={styles.bigText}>Контакти</h2>
-            <p>Загальна кількість: {totalContactsCount}</p>
-            <Filter value={filter} onChange={changeFilter} />
-            <ContactList
-              contacts={visibleContacts()}
-              onDeleteContact={deleteContact}
-            />
-        </section>
-      </div>
-    </>
+    <Container>
+      <h1>Phonebook</h1>
+      <ContactForm onSubmit={addContact} />
+      <h2>Contacts</h2>
+      {contacts.length > 1 && <Filter value={filter} onChange={changeFilter} />}
+      {contacts.length > 0 ? (
+        <ContactList
+          contacts={getVisibleContacts()}
+          onDeleteContact={deleteContact}
+        />
+      ) : (
+        <p>Your phonebook is empty. Please add contact.</p>
+      )}
+      <ToastContainer autoClose={3700} />
+    </Container>
   );
 }
 

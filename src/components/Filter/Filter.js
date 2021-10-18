@@ -1,13 +1,12 @@
 import PropTypes from 'prop-types';
-import styles from './Filter.module.css';
-
+import s from './Filter.module.css';
 
 function Filter({ value, onChange }) {
   return (
-    <label>
-      <p>Пошук контактів:</p>
+    <label className={s.label}>
+      Find contacts by name
       <input
-        className={styles.input}
+        className={s.input}
         type="text"
         value={value}
         onChange={onChange}
@@ -15,10 +14,10 @@ function Filter({ value, onChange }) {
     </label>
   );
 }
-  
+
 Filter.propTypes = {
-    value: PropTypes.string.isRequired,
-    onChange: PropTypes.func.isRequired,
+  value: PropTypes.string,
+  onChange: PropTypes.func.isRequired,
 };
-  
+
 export default Filter;
